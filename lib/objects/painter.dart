@@ -12,13 +12,17 @@ class Painter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    var bluer = Paint()
       ..color = Colors.red
       ..style = PaintingStyle.stroke
       ..strokeWidth = 7;
 
+
     canvas.drawImage(image, Offset.zero, paint);
     for (var i = 0; i <= rect.length - 1; i++) {
-      canvas.drawRect(rect[i], paint);
+      canvas.drawRect(rect[i], bluer);
     }
   }
 

@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:auto_blur/objects/painter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'package:flutter/services.dart' show rootBundle;
 
 
 class HomeScreen extends StatefulWidget {
@@ -16,19 +20,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final ImagePicker _picker = ImagePicker();
   final faceDetector = GoogleMlKit.vision.faceDetector();
+
   late ui.Image uiImage;
+  List<Rect> rectArr = [];
 
+  var imgTile;
 
-  // ignore: unnecessary_statements, unnecessary_statements
   Future pickImage() async {
+    rectArr = [];
+
     // Pick an image
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     final inputImage = InputImage.fromFilePath(image!.path);
-    
+
     final List<Face> faces = await faceDetector.processImage(inputImage);
     print('Found ${faces.length} faces');
 
-    List<Rect> rectArr = [];
 
     for (Face face in faces) {
       final Rect boundingBox = face.boundingBox;
@@ -36,27 +43,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final double? rotY = face.headEulerAngleY; // Head is rotated to the right rotY degrees
       final double? rotZ = face.headEulerAngleZ; // Head is tilted sideways rotZ degrees
 
-      rectArr.add(face.boundingBox);
+      rectArr.add(boundingBox);
     }
 
-    var bytesFromImageFile = inputImage.bytes;
+    var bytesFromImageFile = await File(image.path).readAsBytes();
 
 
-    decodeImageFromList(bytesFromImageFile!).then((img) {
+    decodeImageFromList(bytesFromImageFile).then((img) {
       setState(() {
         uiImage = img;
+        imgTile = CustomPaint(
+          painter: Painter(rectArr, uiImage),
+        );
       });
     });
 
-    FittedBox(
-      child: SizedBox(
-        height: 250,
-        width: 250,
-        child: CustomPaint(
-          painter: Painter(rectArr, uiImage),
-        ),
-      ),
-    );
   }
 
 
@@ -77,14 +78,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text("TEST"),
               ),
             ),
-            Center(
-              child: Container(
-                width: 250,
-                height: 250,
-                child: null,
-              ),
-            )
 
+            Container(
+              child: FittedBox(
+                child: SizedBox(
+                  height: 550,
+                  width: 550,
+                  child: imgTile,
+                ),
+              ),
+            ),
+
+
+            Center(
+              child: TextButton(
+                onPressed: () { pickImage(); },
+                child: Text("CLEAR"),
+              ),
+            ),
           ],
         ),
       ),
