@@ -27,7 +27,6 @@ dependencies:
   google_ml_kit: ^0.7.2
   image_picker: ^0.8.4+4
   flutter_ffmpeg: ^0.4.2
-  video_thumbnail: ^0.4.3
   video_player: ^2.2.6
 #  permission_handler: ^8.2.5
   path_provider: ^2.0.6

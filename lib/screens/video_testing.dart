@@ -9,7 +9,7 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'dart:async';
 
 
 
@@ -57,6 +57,7 @@ class _TestVideoState extends State<TestVideo> {
     }
   }
 
+
   Future pickImage() async {
 
     List<List<Rect>> facesArr = [];   // rect positions
@@ -66,44 +67,53 @@ class _TestVideoState extends State<TestVideo> {
     // Pick a video
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
 
+    // create the folder
+    await createFolder();
 
     // get the video details
     var videoPath = video!.path;
     MediaInformation mediaInformation = await flutterFFprobe.getMediaInformation(videoPath);
     Map<dynamic, dynamic> mp = mediaInformation.getMediaProperties()!;
-    var videoDuration = (double.parse(mp["duration"]) * 1000).toInt();
-    var timePerFrame = 1000 ~/ 24;
+    var videoDuration = (double.parse(mp["duration"])).toInt();
+    var videoWidth = double.parse(1280.toString());
+    var videoHeight = double.parse(640.toString());
+    var frameRate = 24;
+    var saveDigits = 6;
 
 
     // the path for the new image file
     final fileImg = (await getExternalStorageDirectory())!.path + "/autoblurtemp";
 
-    // get the frames of the video
-    for(int i = 0; i < videoDuration; i+=timePerFrame) {
 
-      var videoFrameBytes = await VideoThumbnail.thumbnailData(
-        video: videoPath,
-        imageFormat: ImageFormat.PNG,
-        maxWidth: 640, // specify the width of the thumbnail, let the height auto-scaled to keep the source aspect ratio
-        maxHeight: 360,
-        quality: 25,
-        timeMs: i,
-      );
+    // convert from the images to video using ffmpeg
+    await _flutterFFmpeg.execute(
+      '-i $videoPath -vf fps=$frameRate $fileImg/thumb_%6d.png',
+    ).then((rc)=>print("FFmpeg process exited with rc $rc"));
 
-      // we will get the path to store it into
-      var newPath = "$fileImg/image_$i.png";
+
+    // get the frames for the video
+    for(int i = 1; i < (frameRate * videoDuration).round(); i++){
+
+      // save the new video frames into an external file
+      var pathNum = (i / 1000000).toString().substring(2);
+      // append the path with 0 if it's not of a certain length
+      while(pathNum.length < saveDigits){
+        pathNum += "0";
+      }
+
+      // we will get the path of the images
+      var imagePath = "$fileImg/thumb_$pathNum.png";
 
       // save the image to the path
-      var saveNewFrames = await File(newPath).writeAsBytes(videoFrameBytes!);
+      var initialFrames = new File(imagePath);
 
-      frames.add(saveNewFrames);
+      // add the files to the list of final frames
+      frames.add(initialFrames);
     }
-
-
 
     for(var frame in frames){
       // getting the image from file path
-      final inputImage = InputImage.fromFilePath(frame.path);
+      final inputImage = InputImage.fromFile(frame);
 
       List<Rect> boxes = [];    // initialize the list of boxes
 
@@ -118,51 +128,55 @@ class _TestVideoState extends State<TestVideo> {
       facesArr.add(boxes);
     }
 
-    // create the folder
-    await createFolder();
 
 
     int frameCount = 0;
     // apply the effect into the video frames
     for(var frame in frames){
       // decode the image to bytes
-      var bytesFromImageFile = await frame.readAsBytes();
+      await frame.readAsBytes().then((bytesFromImageFile) async {
+
+        // converting from the bytes to the image
+         await decodeImageFromList(bytesFromImageFile).then((img) async {
+
+          // Convert Canvas with applied effect to Image
+          var pImage = await Painter(facesArr[frameCount], img, videoWidth, videoHeight).getImage();
+          var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
+          var uintBytes = pngBytes!.buffer.asUint8List();
+
+          // the path for the new image file
+          final imageFile = (await getExternalStorageDirectory())!.path + "/autoblurtemp";
+
+          setState(() {
+            imgTile = CustomPaint(
+              painter: Painter(facesArr[frameCount], img, videoWidth, videoHeight),
+            );
+          });
+
+          // save the new video frames into an external file
+          var pathNum = (frameCount / 1000000).toString().substring(2);
+          // append the path with 0 if it's not of a certain length
+          while(pathNum.length < saveDigits){
+            pathNum += "0";
+          }
+
+          // we will get the new path
+          var newPath = "$imageFile/image_$pathNum.png";
+
+          // save the image to the path
+          var saveNewFrames = await File(newPath).writeAsBytes(uintBytes);
+
+          decodeImageFromList(saveNewFrames.readAsBytesSync()).then((img){
+
+          });
 
 
-      // converting from the bytes to the image
-      decodeImageFromList(bytesFromImageFile).then((img) async {
+          // add the files to the list of final frames
+          finalFrames.add(saveNewFrames);
 
-        // Convert Canvas with applied effect to Image
-        var pImage = await Painter(facesArr[frameCount], img).getImage();
-        var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
-        var uintBytes = pngBytes!.buffer.asUint8List();
-
-        // the path for the new image file
-        final imageFile = (await getExternalStorageDirectory())!.path + "/autoblurtemp";
-
-
-        // save the new video frames into an external file
-        var pathNum = (frameCount / 1000000).toString().substring(2);
-        // append the path with 0 if it's not of a certain length
-        while(pathNum.length < 6){
-          pathNum += "0";
-        }
-
-        // we will get the new path
-        var newPath = "$imageFile/image_$pathNum.png";
-
-        // save the image to the path
-        var saveNewFrames = await File(newPath).writeAsBytes(uintBytes);
-
-        print(saveNewFrames.path);
-
-        // add the files to the list of final frames
-        finalFrames.add(saveNewFrames);
-
-        print("************   NEXT *****************");
+          frameCount++;
+        });
       });
-
-      frameCount++;
     }
 
 
@@ -177,7 +191,7 @@ class _TestVideoState extends State<TestVideo> {
     for(int i = 0; i < frames.length; i++){
       // remove the original video frames
       deleteFile(frames[i]);
-      // // remove the new video frames
+      // remove the new video frames
       deleteFile(finalFrames[i]);
     }
   }
@@ -192,7 +206,7 @@ class _TestVideoState extends State<TestVideo> {
 
     // convert from the images to video using ffmpeg
     await _flutterFFmpeg.execute(
-      '-framerate 24 -i $imageFile/image_%6d.png $imageFile/out.mp4',
+      '-framerate 24 -i $imageFile/image_%6d.png -vf scale=720:400:force_original_aspect_ratio=decrease $imageFile/out.mp4',
     ).then((rc)=>print("FFmpeg process exited with rc $rc"));
 
 
@@ -272,6 +286,18 @@ class _TestVideoState extends State<TestVideo> {
                     );
                   }
                 },
+              ),
+            ),
+
+
+
+            Container(
+              child: FittedBox(
+                child: SizedBox(
+                  height: 100,
+                  width: 1000,
+                  child: imgTile,
+                ),
               ),
             ),
 

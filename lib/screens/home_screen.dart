@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     decodeImageFromList(bytesFromImageFile).then((img) async {
       // Convert Canvas to Image
-      var pImage = await Painter(rectArr, img).getImage();
+      var pImage = await Painter(rectArr, img, 640, 360).getImage();
       var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
       var uintBytes = pngBytes!.buffer.asUint8List();
 
@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         imgTile = CustomPaint(
-          painter: Painter(rectArr, img),
+          painter: Painter(rectArr, img, 640, 360),
         );
       });
 

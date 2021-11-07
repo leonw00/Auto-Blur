@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 
 class Painter extends CustomPainter {
 
-  Painter(this.rect, this.image);
+  Painter(this.rect, this.image, this.width, this.height);
 
   final List<Rect> rect;
   ui.Image image;
   var picture;
   var finalImage;
+  double width;
+  double height;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -37,10 +39,10 @@ class Painter extends CustomPainter {
   Future<ui.Image> getImage() async {
     ui.PictureRecorder recorder = ui.PictureRecorder();
     Canvas canvas = Canvas(recorder);
-    Painter painter = Painter(rect, image);
-    var size = Size(640, 360);
+    Painter painter = Painter(rect, image, width, height);
+    var size = Size(width, height);
     painter.paint(canvas, size);
     final ui.Picture picture = recorder.endRecording();
-    return await picture.toImage(size.width.toInt(), size.height.toInt());
+    return await picture.toImage(width.toInt(), height.toInt());
   }
 }
