@@ -1,5 +1,4 @@
 import 'dart:ui' as ui;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Painter extends CustomPainter {
@@ -8,9 +7,12 @@ class Painter extends CustomPainter {
 
   final List<Rect> rect;
   ui.Image image;
+  var picture;
+  var finalImage;
 
   @override
   void paint(Canvas canvas, Size size) {
+
     var paint = Paint()
       ..style = PaintingStyle.fill;
 
@@ -24,10 +26,21 @@ class Painter extends CustomPainter {
     for (var i = 0; i <= rect.length - 1; i++) {
       canvas.drawRect(rect[i], bluer);
     }
+
   }
 
   @override
   bool shouldRepaint(oldDelegate) {
     return true;
+  }
+
+  Future<ui.Image> getImage() async {
+    ui.PictureRecorder recorder = ui.PictureRecorder();
+    Canvas canvas = Canvas(recorder);
+    Painter painter = Painter(rect, image);
+    var size = Size(640, 360);
+    painter.paint(canvas, size);
+    final ui.Picture picture = recorder.endRecording();
+    return await picture.toImage(size.width.toInt(), size.height.toInt());
   }
 }
