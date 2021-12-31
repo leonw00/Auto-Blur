@@ -1,3 +1,4 @@
+import 'package:auto_blur/screens/base_screen.dart';
 import 'package:auto_blur/screens/home_screen.dart';
 import 'package:auto_blur/screens/video_testing.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Auto Blur',
       initialRoute: '/',
       routes: {
-        '/': (context) => TestVideo(),
+        '/': (context) => BaseScreen(),
       },
     );
   }
