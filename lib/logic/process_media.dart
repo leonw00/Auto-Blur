@@ -1,24 +1,24 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
-import 'package:auto_blur/objects/image_container.dart';
 import 'package:auto_blur/objects/painter.dart';
-import 'package:auto_blur/objects/video_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-Future processImage() async {
-  final ImagePicker _picker = ImagePicker();
+
+Future processImage(String link, int width, int height) async {
   final faceDetector = GoogleMlKit.vision.faceDetector();
+  List<Rect> rectArr = [];
 
-  var rectArr = [];
+  // convert the ints into doubles
+  double imageWidth = width.toDouble();
+  double imageHeight = height.toDouble();
 
-  // Pick an image
-  final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-  final inputImage = InputImage.fromFilePath(image!.path);
-
+  // get the image
+  final inputImage = InputImage.fromFilePath(link);
 
   // detect the faces
   final List<Face> faces = await faceDetector.processImage(inputImage);
@@ -33,32 +33,50 @@ Future processImage() async {
     rectArr.add(boundingBox);
   }
 
-  var bytesFromImageFile = await File(image.path).readAsBytes();
+  var bytesFromImageFile = await File(link).readAsBytes();
 
+  var finalImagePainter;
+  var finalImageBytes;
 
-  // create folder
-  final dir = Directory((await getExternalStorageDirectory())!.path + "/autoblurtemp");
-  dir.create();
+  await decodeImageFromList(bytesFromImageFile).then((img) async {
+    // Convert Canvas to Image
+    var pImage = await Painter(rectArr, img, imageWidth, imageHeight).getImage();
+    var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
+    var uintBytes = pngBytes!.buffer.asUint8List();
+
+    finalImagePainter = CustomPaint(
+      painter: Painter(rectArr, img, imageWidth, imageHeight),
+    );
+
+    finalImageBytes = uintBytes;
+
+  });
+
+  return {"image" : finalImagePainter, "bytes" : finalImageBytes, "width" : imageWidth, "height" : imageHeight};
+
+}
+
+Future saveImage(var bytes) async {
 
   // path directory for saving
   final imageFile = (await getExternalStorageDirectory())!.path + "/autoblurtemp";
 
+  // check if folder exists
+  final dir = Directory(imageFile);
 
-  decodeImageFromList(bytesFromImageFile).then((img) async {
-    // Convert Canvas to Image
-    var pImage = await Painter(rectArr, img, 640, 360).getImage();
-    var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
-    var uintBytes = pngBytes!.buffer.asUint8List();
+  await dir.exists().then((exist){
+    // create folder
+    if(!exist){dir.create();}
+  }) ;
 
-    // Save the image to desired location
-    var saveNewFrames = new File("$imageFile/image_hehe").writeAsBytes(uintBytes);
+  // create random file name
+  var randomString = generateRandomString(10);
 
+  // Save the image to desired location
+  var savedImage = new File("$imageFile/{$randomString}").writeAsBytes(bytes);
+}
 
-    setState(() {
-      imgTile = CustomPaint(
-        painter: Painter(rectArr, img, 640, 360),
-      );
-    });
-
-  });
+String generateRandomString(int len) {
+  var r = Random();
+  return String.fromCharCodes(List.generate(len, (index) => r.nextInt(33) + 89));
 }

@@ -4,6 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class PostProcessScreen extends StatefulWidget {
+
+  final imagePainter;
+  final imageBytes;
+  final imageWidth;
+  final imageHeight;
+
+  PostProcessScreen({this.imageBytes, this.imagePainter, this.imageWidth, this.imageHeight});
+
   @override
   _PostProcessScreenState createState() => _PostProcessScreenState();
 }
@@ -34,7 +42,13 @@ class _PostProcessScreenState extends State<PostProcessScreen> {
                       color: Colors.black54,
                       borderRadius: BorderRadius.all(Radius.circular(20))
                   ),
-                  child: Container(),
+                  child: FittedBox(
+                    child: Container(
+                      width: widget.imageWidth,
+                      height: widget.imageHeight,
+                      child: widget.imagePainter,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -60,7 +74,9 @@ class _PostProcessScreenState extends State<PostProcessScreen> {
                     PostProcessButton(
                       size: iconSize,
                       icon: Icons.arrow_back,
-                      function: (){},
+                      function: (){
+                        Navigator.pop(context);
+                      },
                     ),
 
                     // Edit Button
@@ -74,7 +90,9 @@ class _PostProcessScreenState extends State<PostProcessScreen> {
                     PostProcessButton(
                       size: iconSize,
                       icon: Icons.close,
-                      function: (){},
+                      function: (){
+                        Navigator.popAndPushNamed(context, "/");
+                      },
                     ),
 
                     // Save Button
