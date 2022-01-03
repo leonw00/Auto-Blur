@@ -1,13 +1,13 @@
 import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class MediaContainer extends StatelessWidget {
+class ImagePostProcess extends StatefulWidget {
+  @override
+  _ImagePostProcessState createState() => _ImagePostProcessState();
+}
 
-  final link;
-
-  MediaContainer({this.link});
+class _ImagePostProcessState extends State<ImagePostProcess> {
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class MediaContainer extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(20))
                 ),
                 child: Image.file(
-                  File(this.link),
+                  File(""),
                   fit: BoxFit.contain,
                 ),
               ),
