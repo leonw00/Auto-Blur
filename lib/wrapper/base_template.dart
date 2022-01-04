@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:auto_blur/objects/image_container.dart';
-import 'package:auto_blur/objects/painter.dart';
+import '../objects/painters/blur_painter.dart';
 import 'package:auto_blur/objects/video_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -2,9 +2,9 @@ import 'dart:ui' as ui;
 import 'package:auto_blur/logic/size_to_rect.dart';
 import 'package:flutter/material.dart';
 
-class Painter extends CustomPainter {
+class BlurPainter extends CustomPainter {
 
-  Painter(this.rect, this.image, this.width, this.height);
+  BlurPainter(this.rect, this.image, this.width, this.height);
 
   final List<Rect> rect;
   ui.Image image;
@@ -53,7 +53,7 @@ class Painter extends CustomPainter {
   Future<ui.Image> getImage() async {
     ui.PictureRecorder recorder = ui.PictureRecorder();
     Canvas canvas = Canvas(recorder);
-    Painter painter = Painter(rect, image, width, height);
+    BlurPainter painter = BlurPainter(rect, image, width, height);
     var size = Size(width, height);
     painter.paint(canvas, size);
     final ui.Picture picture = recorder.endRecording();

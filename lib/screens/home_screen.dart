@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:auto_blur/objects/painter.dart';
+import '../objects/painters/blur_painter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     decodeImageFromList(bytesFromImageFile).then((img) async {
       // Convert Canvas to Image
-      var pImage = await Painter(rectArr, img, 640, 360).getImage();
+      var pImage = await BlurPainter(rectArr, img, 640, 360).getImage();
       var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
       var uintBytes = pngBytes!.buffer.asUint8List();
 
@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         imgTile = CustomPaint(
-          painter: Painter(rectArr, img, 640, 360),
+          painter: BlurPainter(rectArr, img, 640, 360),
         );
       });
 

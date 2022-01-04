@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
-import 'package:auto_blur/objects/painter.dart';
+import '../objects/painters/blur_painter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 
@@ -52,18 +51,26 @@ Future processImage(String link, int width, int height) async {
 
   await decodeImageFromList(bytesFromImageFile).then((img) async {
     // Convert Canvas to Image
-    var pImage = await Painter(rectArr, img, imageWidth, imageHeight).getImage();
+    var pImage = await BlurPainter(rectArr, img, imageWidth, imageHeight).getImage();
     var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
     var uintBytes = pngBytes!.buffer.asUint8List();
 
     // show progress toast
     EasyLoading.showProgress(1, status: "Finalizing Image...");
 
-    finalImagePainter = CustomPaint(
-      painter: Painter(rectArr, img, imageWidth, imageHeight),
-    );
-
-    finalImageBytes = uintBytes;
+    // if there exists a face
+    if(rectArr.isNotEmpty) {
+      finalImagePainter = CustomPaint(
+        painter: BlurPainter(rectArr, img, imageWidth, imageHeight),
+      );
+      finalImageBytes = uintBytes;
+    }
+    else{
+      finalImagePainter = CustomPaint(
+        painter: BlurPainter(rectArr, img, imageWidth, imageHeight),
+      );
+      finalImageBytes = uintBytes;
+    }
 
   });
 
@@ -91,7 +98,7 @@ Future saveImage(var bytes) async {
   var randomString = generateRandomString(10);
 
   // create the saved file location
-  String saveLocation = "$imageFile/$randomString";
+  String saveLocation = "$imageFile/$randomString.png";
 
   print(saveLocation);
 
@@ -99,7 +106,14 @@ Future saveImage(var bytes) async {
   var savedImage = await new File(saveLocation).writeAsBytes(bytes);
 
   // save image to gallery
-  // GallerySaver.saveImage(saveLocation, albumName: "Media").then((value) => EasyLoading.showSuccess("Image saved!"));
+  GallerySaver.saveImage(saveLocation).then((status){
+    if(status!){
+      EasyLoading.showSuccess("Image saved!");
+      Future.delayed(const Duration(milliseconds: 500), (){
+        EasyLoading.dismiss();
+      });
+    }
+  });
 
 }
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:auto_blur/objects/painter.dart';
+import '../objects/painters/blur_painter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
@@ -140,7 +140,7 @@ class _TestVideoState extends State<TestVideo> {
          await decodeImageFromList(bytesFromImageFile).then((img) async {
 
           // Convert Canvas with applied effect to Image
-          var pImage = await Painter(facesArr[frameCount], img, videoWidth, videoHeight).getImage();
+          var pImage = await BlurPainter(facesArr[frameCount], img, videoWidth, videoHeight).getImage();
           var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
           var uintBytes = pngBytes!.buffer.asUint8List();
 
@@ -149,7 +149,7 @@ class _TestVideoState extends State<TestVideo> {
 
           setState(() {
             imgTile = CustomPaint(
-              painter: Painter(facesArr[frameCount], img, videoWidth, videoHeight),
+              painter: BlurPainter(facesArr[frameCount], img, videoWidth, videoHeight),
             );
           });
 
