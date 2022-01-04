@@ -4,18 +4,27 @@ import 'dart:ui' as ui;
 import 'package:auto_blur/objects/painter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 
 Future processImage(String link, int width, int height) async {
+
+  // show progress toast
+  EasyLoading.showProgress(0.2, status: "Processing Image...");
+
   final faceDetector = GoogleMlKit.vision.faceDetector();
   List<Rect> rectArr = [];
 
   // convert the ints into doubles
   double imageWidth = width.toDouble();
   double imageHeight = height.toDouble();
+
+  // show progress toast
+  EasyLoading.showProgress(0.5, status: "Detecting Faces...");
 
   // get the image
   final inputImage = InputImage.fromFilePath(link);
@@ -33,6 +42,9 @@ Future processImage(String link, int width, int height) async {
     rectArr.add(boundingBox);
   }
 
+  // show progress toast
+  EasyLoading.showProgress(0.7, status: "Blurring Faces...");
+
   var bytesFromImageFile = await File(link).readAsBytes();
 
   var finalImagePainter;
@@ -44,6 +56,9 @@ Future processImage(String link, int width, int height) async {
     var pngBytes = await pImage.toByteData(format: ui.ImageByteFormat.png);
     var uintBytes = pngBytes!.buffer.asUint8List();
 
+    // show progress toast
+    EasyLoading.showProgress(1, status: "Finalizing Image...");
+
     finalImagePainter = CustomPaint(
       painter: Painter(rectArr, img, imageWidth, imageHeight),
     );
@@ -51,6 +66,9 @@ Future processImage(String link, int width, int height) async {
     finalImageBytes = uintBytes;
 
   });
+
+  // dismiss the loading toast
+  EasyLoading.dismiss();
 
   return {"image" : finalImagePainter, "bytes" : finalImageBytes, "width" : imageWidth, "height" : imageHeight};
 
@@ -64,19 +82,29 @@ Future saveImage(var bytes) async {
   // check if folder exists
   final dir = Directory(imageFile);
 
-  await dir.exists().then((exist){
+  await dir.exists().then((exist) async {
     // create folder
-    if(!exist){dir.create();}
+    if(!exist){await dir.create();}
   }) ;
 
   // create random file name
   var randomString = generateRandomString(10);
 
+  // create the saved file location
+  String saveLocation = "$imageFile/$randomString";
+
+  print(saveLocation);
+
   // Save the image to desired location
-  var savedImage = new File("$imageFile/{$randomString}").writeAsBytes(bytes);
+  var savedImage = await new File(saveLocation).writeAsBytes(bytes);
+
+  // save image to gallery
+  // GallerySaver.saveImage(saveLocation, albumName: "Media").then((value) => EasyLoading.showSuccess("Image saved!"));
+
 }
 
 String generateRandomString(int len) {
   var r = Random();
-  return String.fromCharCodes(List.generate(len, (index) => r.nextInt(33) + 89));
+  const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+  return List.generate(len, (index) => _chars[r.nextInt(_chars.length)]).join();
 }

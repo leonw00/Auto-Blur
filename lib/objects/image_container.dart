@@ -46,7 +46,6 @@ class ImageContainer extends StatelessWidget {
                   child: Center(
                     child: TextButton(
                       onPressed: () async {
-                        // popup to show loading
 
                         // decode image to get size
                         var decodedImage = await decodeImageFromList(imageFile.readAsBytesSync());

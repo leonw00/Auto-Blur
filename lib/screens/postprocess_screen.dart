@@ -1,3 +1,4 @@
+import 'package:auto_blur/logic/process_media.dart';
 import 'package:auto_blur/objects/postprocess_button.dart';
 import 'package:auto_blur/wrapper/base_template.dart';
 import 'package:flutter/cupertino.dart';
@@ -99,7 +100,9 @@ class _PostProcessScreenState extends State<PostProcessScreen> {
                     PostProcessButton(
                       size: iconSize,
                       icon: Icons.download,
-                      function: (){},
+                      function: (){
+                        saveImage(widget.imageBytes);
+                      },
                     ),
 
                     // share Button

@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:auto_blur/logic/size_to_rect.dart';
 import 'package:flutter/material.dart';
 
 class Painter extends CustomPainter {
@@ -15,20 +16,33 @@ class Painter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-    var paint = Paint()
-      ..style = PaintingStyle.fill;
+    Size imageSize = new Size(width, height);
 
-    var bluer = Paint()
-      ..color = Colors.red
+    Paint shaderPaint = Paint();
+
+    Paint framePaint = Paint()
+      ..color = Color(0xffaa0000)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7;
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4)
+      ..strokeWidth = 6;
 
 
-    canvas.drawImage(image, Offset.zero, paint);
+    Matrix4 matrix = sizeToRect(imageSize, Offset.zero & size);
+    // inverseMatrix = Matrix4.copy(matrix)..invert();
+    shaderPaint.shader = ImageShader(image, TileMode.clamp, TileMode.clamp, matrix.storage);
+    Rect clip = MatrixUtils.transformRect(matrix, Offset.zero & imageSize);
+
+
+    // draw the base image
+    canvas.drawImage(image, Offset.zero, Paint()..style = PaintingStyle.fill);
+
+    // cover the selected regions
     for (var i = 0; i <= rect.length - 1; i++) {
-      canvas.drawRect(rect[i], bluer);
+      canvas.clipRect(rect[i]);
     }
 
+    // set the selected regions to be blurred
+    canvas.drawRect(clip, shaderPaint..imageFilter = ui.ImageFilter.blur(sigmaX: 50, sigmaY: 50));
   }
 
   @override
