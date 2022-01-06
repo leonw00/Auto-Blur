@@ -38,9 +38,7 @@ class _TestVideoState extends State<TestVideo> {
       if (await file.exists()) {
         await file.delete();
       }
-    } catch (e) {
-      // Error in getting access to the file.
-    }
+    } catch (e) {}
   }
 
   Future<String> createFolder() async {

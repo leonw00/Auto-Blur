@@ -35,8 +35,11 @@ class _VideoContainerState extends State<VideoContainer> {
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
+
+
     return FractionallySizedBox(
         widthFactor: 0.85,
         heightFactor: 0.9,
@@ -55,11 +58,14 @@ class _VideoContainerState extends State<VideoContainer> {
                     if (snapshot.connectionState == ConnectionState.done) {
                       // If the VideoPlayerController has finished initialization, use
                       // the data it provides to limit the aspect ratio of the video.
-                      return AspectRatio(
-                        aspectRatio: _controller.value.aspectRatio,
-                        // Use the VideoPlayer widget to display the video.
-                        child: VideoPlayer(_controller),
-                      );
+                      return FittedBox(
+                          fit: BoxFit.contain,
+                          child: SizedBox(
+                            width: _controller.value.size.width / 1000,
+                            height: _controller.value.size.height / 1000,
+                            child: VideoPlayer(_controller),
+                          ),
+                        );
                     } else {
                       // If the VideoPlayerController is still initializing, show a
                       // loading spinner.
@@ -84,7 +90,7 @@ class _VideoContainerState extends State<VideoContainer> {
                   child: Center(
                     child: TextButton(
                       onPressed: (){
-                        // go to a new screen to process the image
+                        // go to a new screen to process the video
 
                         // show ad
                       },
