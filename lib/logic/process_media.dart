@@ -250,7 +250,14 @@ Future processVideo(String videoPath, int width, int height) async {
     facesArr.add(boxes);
   }
 
+  // *********************************************
+  // If there is no face detected, then terminate
+  // *********************************************
 
+  if(facesArr.isEmpty){
+    EasyLoading.dismiss();
+    return videoPath;
+  }
 
   int frameCount = 0;
   // apply the effect into the video frames
