@@ -1,7 +1,6 @@
 import 'dart:io';
-
 import 'package:auto_blur/logic/process_media.dart';
-import 'package:auto_blur/screens/postprocess_screen.dart';
+import 'package:auto_blur/screens/image_postprocess_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -56,7 +55,7 @@ class ImageContainer extends StatelessWidget {
                           // go to a new screen to show the processed the image
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => PostProcessScreen(
+                            MaterialPageRoute(builder: (context) => ImagePostProcessScreen(
                               imagePainter: processed["image"],
                               imageBytes: processed["bytes"],
                               imageWidth: processed["width"],

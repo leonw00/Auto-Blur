@@ -4,20 +4,20 @@ import 'package:auto_blur/wrapper/base_template.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class PostProcessScreen extends StatefulWidget {
+class ImagePostProcessScreen extends StatefulWidget {
 
   final imagePainter;
   final imageBytes;
   final imageWidth;
   final imageHeight;
 
-  PostProcessScreen({this.imageBytes, this.imagePainter, this.imageWidth, this.imageHeight});
+  ImagePostProcessScreen({this.imageBytes, this.imagePainter, this.imageWidth, this.imageHeight});
 
   @override
-  _PostProcessScreenState createState() => _PostProcessScreenState();
+  _ImagePostProcessScreenState createState() => _ImagePostProcessScreenState();
 }
 
-class _PostProcessScreenState extends State<PostProcessScreen> {
+class _ImagePostProcessScreenState extends State<ImagePostProcessScreen> {
 
   @override
   Widget build(BuildContext context) {
