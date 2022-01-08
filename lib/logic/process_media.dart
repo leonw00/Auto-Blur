@@ -160,7 +160,7 @@ Future shareImage(var bytes) async {
   // Save the image to desired location
   var savedImage = await new File(saveLocation).writeAsBytes(bytes);
 
-  // save image to gallery
+  // share the image
   Share.shareFiles([saveLocation], text: "blurred image");
 }
 
@@ -332,3 +332,18 @@ Future processVideo(String videoPath, int width, int height) async {
   return "$fileImg/out.mp4";
 }
 
+
+Future saveVideo(String videoLink) async {
+  GallerySaver.saveVideo(videoLink).then((status){
+    if(status!){
+      EasyLoading.showSuccess("Video saved!");
+      Future.delayed(const Duration(milliseconds: 500), (){
+        EasyLoading.dismiss();
+      });
+    }
+  });
+}
+
+Future shareVideo(String videoLink) async {
+  Share.shareFiles([videoLink], text: "blurred video");
+}

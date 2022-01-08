@@ -172,6 +172,7 @@ class _VideoPostProcessScreenState extends State<VideoPostProcessScreen> {
                         size: iconSize,
                         icon: Icons.download,
                         function: (){
+                          saveVideo(widget.link);
                         },
                       ),
 
@@ -180,6 +181,7 @@ class _VideoPostProcessScreenState extends State<VideoPostProcessScreen> {
                         size: iconSize,
                         icon: Icons.share,
                         function: (){
+                          shareVideo(widget.link);
                         },
                       ),
 
