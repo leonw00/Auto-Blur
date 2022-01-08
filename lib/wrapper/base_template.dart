@@ -1,14 +1,8 @@
-import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:auto_blur/objects/image_container.dart';
-import '../objects/painters/blur_painter.dart';
 import 'package:auto_blur/objects/video_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart';
 
 class BaseWrapper extends StatefulWidget {
 

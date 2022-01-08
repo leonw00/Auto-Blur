@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:auto_blur/objects/painters/normal_painter.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:flutter_ffmpeg/media_information.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../objects/painters/blur_painter.dart';
 import 'package:flutter/cupertino.dart';
@@ -120,7 +121,7 @@ Future processImage(String link, int width, int height) async {
 Future saveImage(var bytes) async {
 
   // path directory for saving
-  final imageDir = createFolder();
+  final imageDir = await createFolder();
 
   // create random file name
   var randomString = generateRandomString(10);
@@ -144,11 +145,29 @@ Future saveImage(var bytes) async {
   });
 }
 
+Future shareImage(var bytes) async {
+  // path directory for saving
+  final imageDir = await createFolder();
+
+  // create random file name
+  var randomString = generateRandomString(10);
+
+  // create the saved file location
+  String saveLocation = "$imageDir/$randomString.png";
+
+  print(saveLocation);
+
+  // Save the image to desired location
+  var savedImage = await new File(saveLocation).writeAsBytes(bytes);
+
+  // save image to gallery
+  Share.shareFiles([saveLocation], text: "blurred image");
+}
+
 Future processVideo(String videoPath, int width, int height) async {
 
   List<List<Rect>> facesArr = [];   // rect positions
   var frames = [];                  // list of frames
-  var finalFrames = [];             // list of the final frames
 
   final faceDetector = GoogleMlKit.vision.faceDetector();
   final FlutterFFprobe flutterFFprobe = FlutterFFprobe();
@@ -176,12 +195,22 @@ Future processVideo(String videoPath, int width, int height) async {
     '-i $videoPath -vf fps=$frameRate $fileImg/thumb_%${saveDigits}d.png',
   ).then((rc)=>print("FFmpeg process exited with rc $rc"));
 
+  // ---------------------------------------------------------------------------------------------
+  // [Video Frames progress]
+  EasyLoading.showProgress(0, status: "Retrieving video frames...");
+  // ---------------------------------------------------------------------------------------------
 
   // get the frames for the video
   for(int i = 1; i < (frameRate * videoDuration).round(); i++){
 
+    // ---------------------------------------------------------------------------------------------
+    // [Video Frames progress]
+    var progress = (i / (frameRate * videoDuration).round()) * 0.2;
+    EasyLoading.showProgress(progress.toDouble(), status: "Retrieving video frames...");
+    // ---------------------------------------------------------------------------------------------
+
     // save the new video frames into an external file
-    var pathNum = (i / 1000000).toString().substring(2);
+    var pathNum = (i / pow(10, saveDigits).toInt()).toString().substring(2);
     // append the path with 0 if it's not of a certain length
     while(pathNum.length < saveDigits){
       pathNum += "0";
@@ -198,6 +227,13 @@ Future processVideo(String videoPath, int width, int height) async {
   }
 
   for(var frame in frames){
+
+    // ---------------------------------------------------------------------------------------------
+    // [Detecting Faces in Frames progress]
+    var progress = 0.2 + ((frames.indexOf(frame) / frames.length) * 0.3);
+    EasyLoading.showProgress(progress.toDouble(), status: "Detecting Faces...");
+    // ---------------------------------------------------------------------------------------------
+
     // getting the image from file path
     final inputImage = InputImage.fromFile(frame);
 
@@ -219,6 +255,13 @@ Future processVideo(String videoPath, int width, int height) async {
   int frameCount = 0;
   // apply the effect into the video frames
   for(var frame in frames){
+
+    // ---------------------------------------------------------------------------------------------
+    // [Blurring the faces]
+    var progress = 0.5 + ((frames.indexOf(frame) / frames.length) * 0.4);
+    EasyLoading.showProgress(progress.toDouble(), status: "Blurring Faces...");
+    // ---------------------------------------------------------------------------------------------
+
     // decode the image to bytes
     await frame.readAsBytes().then((bytesFromImageFile) async {
 
@@ -234,7 +277,7 @@ Future processVideo(String videoPath, int width, int height) async {
         final imageFile = (await getExternalStorageDirectory())!.path + "/autoblurtemp";
 
         // save the new video frames into an external file
-        var pathNum = (frameCount / 1000000).toString().substring(2);
+        var pathNum = (frameCount / pow(10, saveDigits).toInt()).toString().substring(2);
         // append the path with 0 if it's not of a certain length
         while(pathNum.length < saveDigits){
           pathNum += "0";
@@ -246,25 +289,46 @@ Future processVideo(String videoPath, int width, int height) async {
         // save the image to the path
         var saveNewFrames = await File(newPath).writeAsBytes(uintBytes);
 
-        decodeImageFromList(saveNewFrames.readAsBytesSync()).then((img){
-
-        });
-
-
-        // add the files to the list of final frames
-        finalFrames.add(saveNewFrames);
-
         frameCount++;
       });
     });
   }
 
+  // ***********************************************
+  // ****** Merge the Frames into a video **********
+  // ***********************************************
+
+  // ---------------------------------------------------------------------------------------------
+  // [Merge the frames]
+  EasyLoading.showProgress(0.95, status: "Finalizing Video...");
+  // ---------------------------------------------------------------------------------------------
+
+  // convert from the images to video using ffmpeg
+  await _flutterFFmpeg.execute(
+    '-framerate 24 -i $fileImg/image_%6d.png -vf scale=720:400:force_original_aspect_ratio=decrease $fileImg/out.mp4',
+  ).then((rc)=>print("FFmpeg process exited with rc $rc"));
+
+
+  // ***********************************
+  // ****** Remove the Frames **********
+  // ***********************************
 
   // remove all the files
   for(int i = 0; i < frames.length; i++){
+
+    // ---------------------------------------------------------------------------------------------
+    // [Merge the frames]
+    var progress = 0.95 + (i / frames.length) * 0.05;
+    EasyLoading.showProgress(progress, status: "Finalizing Video...");
+    // ---------------------------------------------------------------------------------------------
+
     // remove the original video frames
     deleteFile(frames[i]);
-    // remove the new video frames
-    deleteFile(finalFrames[i]);
   }
+
+  EasyLoading.dismiss();
+
+  // return the location of the output
+  return "$fileImg/out.mp4";
 }
+

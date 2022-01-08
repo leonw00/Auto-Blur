@@ -109,7 +109,9 @@ class _PostProcessScreenState extends State<PostProcessScreen> {
                     PostProcessButton(
                       size: iconSize,
                       icon: Icons.share,
-                      function: (){},
+                      function: (){
+                        shareImage(widget.imageBytes);
+                      },
                     ),
 
                   ],

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:auto_blur/logic/process_media.dart';
+import 'package:auto_blur/screens/video_postprocess_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -61,8 +63,8 @@ class _VideoContainerState extends State<VideoContainer> {
                       return FittedBox(
                           fit: BoxFit.contain,
                           child: SizedBox(
-                            width: _controller.value.size.width / 1000,
-                            height: _controller.value.size.height / 1000,
+                            width: _controller.value.size.width,
+                            height: _controller.value.size.height,
                             child: VideoPlayer(_controller),
                           ),
                         );
@@ -89,8 +91,23 @@ class _VideoContainerState extends State<VideoContainer> {
                   ),
                   child: Center(
                     child: TextButton(
-                      onPressed: (){
-                        // go to a new screen to process the video
+                      onPressed: () async {
+                        // get the size of the video
+                        var videoWidth = _controller.value.size.width;
+                        var videoHeight = _controller.value.size.height;
+
+                        // process the video
+                        await processVideo(widget.link, videoWidth.toInt(), videoHeight.toInt()).then((processed){
+
+                          // go to a new screen to show the processed video
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => VideoPostProcessScreen(
+                              link: processed,
+                            )),
+                          );
+
+                        });
 
                         // show ad
                       },
