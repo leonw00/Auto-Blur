@@ -1,5 +1,7 @@
 import 'package:auto_blur/logic/process_media.dart';
+import 'package:auto_blur/objects/others/postprocess_row.dart';
 import 'package:auto_blur/objects/postprocess_button.dart';
+import 'package:auto_blur/wrapper/base_image_wrapper.dart';
 import 'package:auto_blur/wrapper/base_template.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,24 +35,15 @@ class _ImagePostProcessScreenState extends State<ImagePostProcessScreen> {
         child: Stack(
           children: [
             Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.85,
-                heightFactor: 0.9,
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.all(Radius.circular(20))
-                  ),
-                  child: FittedBox(
-                    child: Container(
-                      width: widget.imageWidth,
-                      height: widget.imageHeight,
-                      child: widget.imagePainter,
-                    ),
+              child: BaseImageWrapper(
+                child: FittedBox(
+                  child: Container(
+                    width: widget.imageWidth,
+                    height: widget.imageHeight,
+                    child: widget.imagePainter,
                   ),
                 ),
+                hasContinue: false,
               ),
             ),
 
@@ -58,64 +51,13 @@ class _ImagePostProcessScreenState extends State<ImagePostProcessScreen> {
               bottom: 0,
               width: screenWidth,
               height: screenHeight / 9,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(15.0),
-                      topLeft: Radius.circular(15.0),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-
-                    // Back Button
-                    PostProcessButton(
-                      size: iconSize,
-                      icon: Icons.arrow_back,
-                      function: (){
-                        Navigator.pop(context);
-                      },
-                    ),
-
-                    // Edit Button
-                    PostProcessButton(
-                      size: iconSize,
-                      icon: Icons.edit,
-                      function: (){},
-                    ),
-
-                    // Discard Button
-                    PostProcessButton(
-                      size: iconSize,
-                      icon: Icons.close,
-                      function: (){
-                        Navigator.popAndPushNamed(context, "/");
-                      },
-                    ),
-
-                    // Save Button
-                    PostProcessButton(
-                      size: iconSize,
-                      icon: Icons.download,
-                      function: (){
-                        saveImage(widget.imageBytes);
-                      },
-                    ),
-
-                    // share Button
-                    PostProcessButton(
-                      size: iconSize,
-                      icon: Icons.share,
-                      function: (){
-                        shareImage(widget.imageBytes);
-                      },
-                    ),
-
-                  ],
-                ),
+              child: PostProcessRow(
+                save: (){
+                  saveImage(widget.imageBytes);
+                },
+                share: (){
+                  shareImage(widget.imageBytes);
+                },
               ),
             ),
           ],
